@@ -17,16 +17,27 @@ export default function App() {
     </QueryClientProvider>
   );
 }
-
 function MainApp() {
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState({});
-  // const [selected, setSelected] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
+
+  // Movie Details (fetched when selectedId changes)
   const { data: movieDetails, isLoading: isLoadingDetails } =
     useMovieDetails(selectedId);
 
+  // Stop showing loader on card once details finish loading
+  React.useEffect(() => {
+    if (!isLoadingDetails && loadingId !== null) {
+      setLoadingId(null);
+    }
+  }, [isLoadingDetails, loadingId]);
+
+  // Debounce search
   const debouncedQ = useDebounce(q, 400);
+
+  // Build filter params
   const filterParams = useMemo(() => {
     const p = {};
     if (filters.genre) p.with_genres = filters.genre;
@@ -34,6 +45,8 @@ function MainApp() {
     if (filters.minVote) p["vote_average.gte"] = filters.minVote;
     return p;
   }, [filters]);
+
+  // Infinite Movies API
   const {
     data,
     fetchNextPage,
@@ -43,33 +56,48 @@ function MainApp() {
     isFetchingNextPage,
   } = useInfiniteMovies({ query: debouncedQ, filters: filterParams });
 
+  // Infinite scroll loader
   function loadMore() {
     if (hasNextPage) fetchNextPage();
   }
+
+  const pages = data?.pages || [];
+
   return (
     <div>
       <Header value={q} onChange={setQ} />
       <Filters onChange={setFilters} />
+
+      {/* Initial loader */}
       {isLoading && <Loader text={LOADING_INITIAL_DATA} />}
+
       {isError && <div>Error while loading movies.</div>}
-      {selectedId == null && !isLoading ? (
+
+      {/* Show Movie Grid only when details popup is not open */}
+      {!isLoading && (
         <MovieGrid
-          pages={data?.pages || []}
+          pages={pages}
           hasMore={!!hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           loadMore={loadMore}
-          onSelect={(m) => {
-            setSelectedId(m.id);
+          loadingId={isLoadingDetails ? loadingId : 0}
+          onSelect={(movie) => {
+            setLoadingId(movie.id); // show loader on this card
+            setSelectedId(movie.id); // trigger details fetch
           }}
         />
-      ) : (
-        <>
-          <MovieDetails
-            movie={movieDetails}
-            isLoadingDetails={isLoadingDetails}
-            onClose={() => setSelectedId(null)}
-          />
-        </>
+      )}
+
+      {/* Movie Details section */}
+      {selectedId !== null && (
+        <MovieDetails
+          movie={movieDetails}
+          isLoadingDetails={isLoadingDetails}
+          onClose={() => {
+            setSelectedId(null);
+            setLoadingId(null);
+          }}
+        />
       )}
     </div>
   );

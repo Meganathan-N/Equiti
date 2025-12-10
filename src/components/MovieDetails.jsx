@@ -16,13 +16,15 @@ const Backdrop = styled.div`
 const Card = styled.div`
   background: #1b1b1b;
   color: #fff;
-  width: 900px;
+  width: 950px;
   max-height: 85vh;
   overflow-y: auto;
   border-radius: 16px;
-  padding: 24px;
+  padding: 28px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.2s ease-in-out;
+  position: relative;
+
+  animation: fadeIn 0.25s ease-in-out;
 
   @keyframes fadeIn {
     from {
@@ -36,19 +38,11 @@ const Card = styled.div`
   }
 `;
 
-const Wrap = styled.div`
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-`;
-
-const Poster = styled.img`
-  width: 280px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-`;
-
 const CloseBtn = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+
   background: #e50914;
   color: white;
   border: none;
@@ -56,116 +50,153 @@ const CloseBtn = styled.button`
   font-size: 14px;
   border-radius: 8px;
   cursor: pointer;
-  float: right;
 
   &:hover {
     background: #b20710;
   }
 `;
 
-const Title = styled.h2`
-  font-size: 28px;
-  margin: 0;
+const Wrap = styled.div`
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 28px;
+`;
 
-  small {
-    opacity: 0.7;
-    font-size: 18px;
-  }
+const Poster = styled.img`
+  width: 300px;
+  height: 450px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  background: #333;
+`;
+
+const Content = styled.div`
+  flex: 1;
+`;
+
+const Title = styled.h2`
+  font-size: 32px;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
 `;
 
 const Section = styled.div`
-  margin: 16px 0;
-  line-height: 1.6;
-  font-size: 16px;
+  margin: 22px 0;
 `;
 
-const SimilarRow = styled.div`
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 4px;
-  }
+const SubTitle = styled.h3`
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #e5e5e5;
 `;
 
-const SimilarCard = styled.div`
-  min-width: 140px;
-  text-align: center;
-
-  img {
-    width: 120px;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  div {
-    font-size: 14px;
-    opacity: 0.85;
-  }
+const Tag = styled.span`
+  background: #333;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin: 0 8px 8px 0;
+  font-size: 13px;
+  display: inline-block;
 `;
 
-export default function MovieDetails({ movie, onClose }) {
+const InfoText = styled.p`
+  margin: 4px 0;
+  color: #ccc;
+`;
+
+const FallbackPoster =
+  "https://dummyimage.com/300x450/111/aaa&text=Poster+Not+Available";
+
+const MovieDetails = ({ movie, onClose }) => {
+  React.useEffect(() => {
+    // Disable scroll
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      // Re-enable scroll when popup closes
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
   if (!movie) return null;
 
-  const poster = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : "/placeholder.png";
+  const {
+    title,
+    overview,
+    runtime,
+    release_date,
+    genres,
+    spoken_languages,
+    poster_path,
+    credits,
+  } = movie;
+
+  const fullPoster = poster_path
+    ? `https://image.tmdb.org/t/p/w500${poster_path}`
+    : FallbackPoster;
+
+  const director = credits?.crew?.find((c) => c.job === "Director");
+  const writer = credits?.crew?.find((c) => c.job === "Writer");
 
   return (
-    <Backdrop>
-      <Card>
+    <Backdrop onClick={onClose}>
+      <Card onClick={(e) => e.stopPropagation()}>
         <CloseBtn onClick={onClose}>Close</CloseBtn>
 
         <Wrap>
-          <Poster src={poster} alt={movie.title} />
+          <Poster src={fullPoster} alt={title} />
 
-          <div style={{ flex: 1 }}>
-            <Title>
-              {movie.title}
-              <small>({movie.release_date?.slice(0, 4)})</small>
-            </Title>
-
-            <Section>{movie.overview}</Section>
+          <Content>
+            <Title>{title}</Title>
 
             <Section>
-              <strong>Genres:</strong>{" "}
-              {movie.genres?.map((g) => g.name).join(", ")}
+              <SubTitle>Overview</SubTitle>
+              <InfoText>{overview || "No description available."}</InfoText>
             </Section>
 
             <Section>
-              <strong>Rating:</strong> ⭐ {movie.vote_average}
+              <SubTitle>Details</SubTitle>
+              <InfoText>
+                <strong>Release Date:</strong> {release_date || "N/A"}
+              </InfoText>
+              <InfoText>
+                <strong>Runtime:</strong> {runtime} mins
+              </InfoText>
+              <InfoText>
+                <strong>Languages:</strong>{" "}
+                {spoken_languages?.length > 0
+                  ? spoken_languages?.map((l) => l.english_name).join(", ")
+                  : "N/A"}
+              </InfoText>
             </Section>
 
-            <h3 style={{ marginTop: 24 }}>Similar Movies</h3>
-            <SimilarRow>
-              {movie.similar?.results?.map((s) => (
-                <SimilarCard key={s.id}>
-                  <img
-                    src={
-                      s.poster_path
-                        ? `https://image.tmdb.org/t/p/w154${s.poster_path}`
-                        : "/placeholder.png"
-                    }
-                    alt={s.title}
-                  />
-                  <div>{s.title}</div>
-                </SimilarCard>
-              ))}
-            </SimilarRow>
-          </div>
+            {genres?.length > 0 && (
+              <Section>
+                <SubTitle>Genres</SubTitle>
+                {genres.map((g) => (
+                  <Tag key={g.id}>{g.name}</Tag>
+                ))}
+              </Section>
+            )}
+
+            <Section>
+              {director && (
+                <InfoText>
+                  <strong>Director:</strong> {director.name}
+                </InfoText>
+              )}
+              {writer && (
+                <InfoText>
+                  <strong>Writer:</strong> {writer.name}
+                </InfoText>
+              )}
+            </Section>
+          </Content>
         </Wrap>
       </Card>
     </Backdrop>
   );
-}
+};
+
+export default MovieDetails;

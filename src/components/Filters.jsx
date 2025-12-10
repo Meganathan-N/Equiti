@@ -5,9 +5,34 @@ import styled from "styled-components";
 const Box = styled.div`
   padding: 12px;
   border-bottom: 1px solid #eee;
+
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+
+  /* Make filters stack cleanly on very small screens */
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  select,
+  input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    background: #fff;
+
+    /* makes controls evenly sized when wrapping */
+    flex: 1;
+    min-width: 140px;
+
+    @media (max-width: 480px) {
+      width: 100%;
+      min-width: 0;
+    }
+  }
 `;
 
 export default function Filters({ onChange }) {
@@ -42,6 +67,7 @@ export default function Filters({ onChange }) {
       </select>
       <input
         placeholder="Year"
+        maxLength={4}
         value={selected.year}
         onChange={(e) => update("year", e.target.value)}
       />

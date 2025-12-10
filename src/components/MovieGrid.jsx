@@ -5,10 +5,20 @@ import Loader from "./Loader";
 import { FETCH_MORE_DETAILS } from "../utils/constant";
 
 const Grid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
   padding: 16px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+    padding: 10px;
+  }
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
 `;
 
 const EmptyState = styled.div`
@@ -28,6 +38,7 @@ export default function MovieGrid({
   loadMore,
   onSelect,
   isFetchingNextPage,
+  loadingId,
 }) {
   const items = pages.flatMap((p) => p.results);
 
@@ -58,7 +69,12 @@ export default function MovieGrid({
       ) : (
         <Grid>
           {items.map((m) => (
-            <MovieCard key={m.id} movie={m} onClick={onSelect} />
+            <MovieCard
+              key={m.id}
+              movie={m}
+              onClick={onSelect}
+              showLoader={loadingId == m.id}
+            />
           ))}
         </Grid>
       )}
