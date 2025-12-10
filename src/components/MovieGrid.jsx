@@ -39,6 +39,7 @@ export default function MovieGrid({
   onSelect,
   isFetchingNextPage,
   loadingId,
+  isError
 }) {
   const items = pages.flatMap((p) => p.results);
 
@@ -60,6 +61,10 @@ export default function MovieGrid({
 
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
+
+  if (isError) {
+      return <EmptyState>Error while loading movies.</EmptyState>
+  }
 
   return (
     <>

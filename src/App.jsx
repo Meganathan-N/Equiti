@@ -9,7 +9,9 @@ import { useInfiniteMovies } from "./hooks/useInfiniteMovies";
 import { useMovieDetails } from "./hooks/useMovieDetails";
 import { LOADING_INITIAL_DATA } from "./utils/constant";
 import Loader from "./components/Loader";
+
 const queryClient = new QueryClient();
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -17,15 +19,15 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+
 function MainApp() {
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState({});
   const [loadingId, setLoadingId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
 
-  // Movie Details (fetched when selectedId changes)
-  const { data: movieDetails, isLoading: isLoadingDetails } =
-    useMovieDetails(selectedId);
+	// Movie Details (fetched when selectedId changes)
+	const { data: movieDetails, isLoading: isLoadingDetails } = useMovieDetails(selectedId);
 
   // Stop showing loader on card once details finish loading
   React.useEffect(() => {
@@ -46,15 +48,8 @@ function MainApp() {
     return p;
   }, [filters]);
 
-  // Infinite Movies API
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isLoading,
-    isError,
-    isFetchingNextPage,
-  } = useInfiniteMovies({ query: debouncedQ, filters: filterParams });
+	// Infinite Movies API
+	const { data, fetchNextPage, hasNextPage, isLoading, isError, isFetchingNextPage } = useInfiniteMovies({ query: debouncedQ, filters: filterParams });
 
   // Infinite scroll loader
   function loadMore() {
@@ -68,25 +63,24 @@ function MainApp() {
       <Header value={q} onChange={setQ} />
       <Filters onChange={setFilters} />
 
-      {/* Initial loader */}
-      {isLoading && <Loader text={LOADING_INITIAL_DATA} />}
+			{/* Initial loader */}
+			{isLoading && <Loader text={LOADING_INITIAL_DATA} />}
 
-      {isError && <div>Error while loading movies.</div>}
-
-      {/* Show Movie Grid only when details popup is not open */}
-      {!isLoading && (
-        <MovieGrid
-          pages={pages}
-          hasMore={!!hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          loadMore={loadMore}
-          loadingId={isLoadingDetails ? loadingId : 0}
-          onSelect={(movie) => {
-            setLoadingId(movie.id); // show loader on this card
-            setSelectedId(movie.id); // trigger details fetch
-          }}
-        />
-      )}
+			{/* Show Movie Grid only when details popup is not open */}
+			{!isLoading && (
+				<MovieGrid
+					pages={pages}
+					hasMore={!!hasNextPage}
+					isFetchingNextPage={isFetchingNextPage}
+					loadMore={loadMore}
+					loadingId={isLoadingDetails ? loadingId : 0}
+					isError={isError}
+					onSelect={(movie) => {
+						setLoadingId(movie.id); // show loader on this card
+						setSelectedId(movie.id); // trigger details fetch
+					}}
+				/>
+			)}
 
       {/* Movie Details section */}
       {selectedId !== null && (
